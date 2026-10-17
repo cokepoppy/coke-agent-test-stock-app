@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { allowedPriceRange, validateOrderPrice } from '../src/order.js';
+import { allowedPriceRange, validateBlockTrade, validateOrderPrice } from '../src/order.js';
 
 const quote = { market: 'BSE', orderType: 'block-trade', hasDailyPriceLimit: false, dailyAverage: 18.36, highestExecuted: 19.12, lowestExecuted: 17.90 };
 
@@ -27,4 +27,38 @@ test('the average price can be the stricter bound and price ticks round inward',
 test('the special rule is not applied to price-limited stocks or non-BSE venues', () => {
   assert.equal(validateOrderPrice(19.50, { ...quote, hasDailyPriceLimit: true }).code, 'NOT_APPLICABLE');
   assert.equal(validateOrderPrice(19.50, { ...quote, market: 'SSE' }).code, 'NOT_APPLICABLE');
+});
+
+test('BSE block-trade orders satisfy either the 100,000-share or CNY 1,000,000 threshold', () => {
+  const amountQualified = validateBlockTrade(18.74, 60_000, quote);
+  assert.equal(amountQualified.valid, true);
+  assert.equal(amountQualified.sharesEligible, false);
+  assert.equal(amountQualified.amountEligible, true);
+  assert.equal(amountQualified.amountCents, 112_440_000);
+
+  const sharesQualified = validateBlockTrade(18.74, 100_000, quote);
+  assert.equal(sharesQualified.valid, true);
+  assert.equal(sharesQualified.sharesEligible, true);
+  assert.equal(sharesQualified.amountEligible, true);
+});
+
+test('below both BSE block-trade minimum thresholds is rejected', () => {
+  const result = validateBlockTrade(18.74, 10_000, quote);
+  assert.equal(result.valid, false);
+  assert.equal(result.code, 'BELOW_BLOCK_TRADE_MINIMUM');
+  assert.equal(result.sharesEligible, false);
+  assert.equal(result.amountEligible, false);
+});
+
+test('the CNY 1,000,000 threshold is inclusive and a sub-cent price is rejected', () => {
+  const exactAmountQuote = { ...quote, dailyAverage: 20, highestExecuted: 20, lowestExecuted: 20 };
+  const exactAmount = validateBlockTrade(20, 50_000, exactAmountQuote);
+  assert.equal(exactAmount.valid, true);
+  assert.equal(exactAmount.amountEligible, true);
+  assert.equal(validateBlockTrade(18.741, 100_000, quote).code, 'INVALID_PRICE');
+});
+
+test('invalid share counts do not pass the BSE minimum threshold', () => {
+  assert.equal(validateBlockTrade(18.74, 0, quote).code, 'INVALID_QUANTITY');
+  assert.equal(validateBlockTrade(18.74, 10_000.5, quote).code, 'INVALID_QUANTITY');
 });

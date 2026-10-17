@@ -3,6 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test"
+    "start": "node server.mjs",
+    "test": "node --test",
+    "test:e2e": "node tests/trade-page.e2e.mjs"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.64.1"
   }
 }
