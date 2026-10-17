@@ -2,6 +2,8 @@
 
 ## Rule and effective date
 
+The Beijing Stock Exchange Trading Rules, Article 3.6.1, allow block trades for a single stock order of at least 100,000 shares **or** at least CNY 1,000,000. The threshold is inclusive and the two paths are alternatives.
+
 The Beijing Stock Exchange notice 北证公告〔2026〕43号 states that the revised provisions in Trading Rule 3.6.5(2) and (3) for block trades in stocks without daily price limits take effect on 2026-10-26. The revised reference is the live average price of that day's auction trades. The valid band is the intersection of the 70%/130% average-price band and the observed low/high executed prices:
 
 - upper bound: the lower of 130% of the live average and the highest executed price;
@@ -16,7 +18,7 @@ Primary sources:
 
 ## Validation behavior
 
-Prices are entered in 0.01 CNY ticks. The calculated lower threshold rounds up to the next tick, and the upper threshold rounds down, so accepted prices never exceed the exact rule band. For the bundled case (average 18.36, high 19.12, low 17.90), the accepted range is 17.90–19.12.
+Prices are entered in 0.01 CNY ticks. The calculated lower threshold rounds up to the next tick, and the upper threshold rounds down, so accepted prices never exceed the exact rule band. For the bundled case (average 18.36, high 19.12, low 17.90), the accepted range is 17.90–19.12. The order form accepts a block trade only when the price is in range, the share quantity is a positive integer, and either the share or amount minimum is reached.
 
 ## Scenario provenance
 
