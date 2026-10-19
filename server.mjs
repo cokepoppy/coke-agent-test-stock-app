@@ -2,6 +2,7 @@ import { createServer as createHttpServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { security } from './src/order.js';
 
 const root = resolve(import.meta.dirname);
 const contentTypes = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' };
@@ -15,6 +16,17 @@ export function createServer() {
     }
     if (pathname === '/healthz') {
       response.writeHead(200, { 'content-type': 'text/plain; charset=utf-8' }).end('ok');
+      return;
+    }
+    if (pathname === '/api/quote') {
+      const payload = Buffer.from(JSON.stringify({ marketDate: security.tradeDate, quote: security }));
+      response.writeHead(200, {
+        'content-type': 'application/json; charset=utf-8',
+        'content-length': payload.length,
+        'cache-control': 'no-store',
+        'x-content-type-options': 'nosniff',
+      });
+      response.end(request.method === 'HEAD' ? undefined : payload);
       return;
     }
     const relativePath = pathname === '/' ? 'index.html' : decodeURIComponent(pathname.slice(1));

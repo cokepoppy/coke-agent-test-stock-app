@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from '../server.mjs';
 
-test('mobile app server serves the page and rule module and rejects methods and path traversal', async t => {
+test('mobile app server serves the page, quote, and rule module and rejects methods and path traversal', async t => {
   const server = createServer();
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   t.after(() => new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve())));
@@ -19,6 +19,14 @@ test('mobile app server serves the page and rule module and rejects methods and 
   assert.equal(moduleResponse.status, 200);
   assert.match(moduleResponse.headers.get('content-type'), /javascript/);
   assert.match(await moduleResponse.text(), /validateBlockTrade/);
+
+  const quoteResponse = await fetch(`${baseUrl}/api/quote`);
+  assert.equal(quoteResponse.status, 200);
+  assert.match(quoteResponse.headers.get('cache-control'), /no-store/);
+  const quoteData = await quoteResponse.json();
+  assert.equal(quoteData.marketDate, '2026-10-26');
+  assert.equal(quoteData.quote.tradeDate, quoteData.marketDate);
+  assert.equal(quoteData.quote.ruleEffectiveFrom, '2026-10-26');
 
   assert.equal((await fetch(`${baseUrl}/healthz`)).status, 200);
   assert.equal((await fetch(`${baseUrl}/missing.js`)).status, 404);

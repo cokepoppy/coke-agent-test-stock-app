@@ -20,6 +20,10 @@ Primary sources:
 
 Prices are entered in 0.01 CNY ticks. The calculated lower threshold rounds up to the next tick, and the upper threshold rounds down, so accepted prices never exceed the exact rule band. For the bundled case (average 18.36, high 19.12, low 17.90), the accepted range is 17.90–19.12. The order form accepts a block trade only when the price is in range, the share quantity is a positive integer, and either the share or amount minimum is reached.
 
+The revised band is only evaluated on or after the effective date. The quote endpoint supplies an authoritative market date alongside the quote date; a missing quote, a quote without valid same-day executions, or a quote from a different trading day blocks both buy and sell validation. A new trading-day quote replaces the prior day's values before the page recalculates the band. The demo intentionally fails closed when it cannot establish which rule applies; it never treats an unavailable range as a successful check.
+
+`GET /api/quote` returns the current fixture as `{ marketDate, quote }` with `cache-control: no-store`. The browser does not persist quote state across reloads. The mobile Chrome E2E intercepts this endpoint to exercise the pre-effective date, missing/no-trade data, stale prior-day data, and a refreshed next-day quote.
+
 ## Scenario provenance
 
 The application shell, security identifier, market observations, account, and order are synthetic fixtures created for an internal software workflow rehearsal. They are not a real brokerage account, live quote, or exchange submission. This provenance belongs in repository and task documentation; the product-style UI stays free of rehearsal labels.
